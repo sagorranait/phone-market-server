@@ -48,13 +48,7 @@ const runServer = async () => {
   });
 
   // Users Functionality Start
-  app.get('/user', verifyJWToken, async (req, res) => {
-      const decodedToken = req.decoded;
-            
-      if(decodedToken.email !== req.query.email){
-            res.status(403).send({message: 'unauthorized access'})
-      }
-      
+   app.get('/user', async (req, res) => { 
       let query = {};
       if (req.query.email) {
          query = {
@@ -72,6 +66,23 @@ const runServer = async () => {
       res.send(result);
    });
   // Users Functionality End
+
+  // Category Functionality Start
+  app.get('/categories', async (req, res) => { 
+      let query = {};
+      const cursor = category.find(query);
+      const categories = await cursor.toArray();
+      res.send(categories);
+   });
+
+   app.get('/category/product/:id', async (req, res) => { 
+      const id = req.params.id;
+      const query = { "cat_id": id };
+      const cursor = products.find(query);
+      const product = await cursor.toArray();
+      res.send(product);
+   });
+  // Category Functionality End
 
 }
 
