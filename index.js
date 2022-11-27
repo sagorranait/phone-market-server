@@ -35,9 +35,10 @@ const verifyJWToken = (req, res, next) => {
 
 const runServer = async () => {
    const users = client.db('phoneMarket').collection('users');
-   const orders = client.db('phoneMarket').collection('orders');
    const products = client.db('phoneMarket').collection('products');
+   const category = client.db('phoneMarket').collection('category');
    const productReport = client.db('phoneMarket').collection('productReport');
+   const bookedProduct = client.db('phoneMarket').collection('bookedProduct');
 
    // JWT
    app.post('/jwt', (req, res) =>{
@@ -45,6 +46,32 @@ const runServer = async () => {
       const token = jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: '1d'})
       res.send({token})
   });
+
+  // Users Functionality Start
+  app.get('/user', verifyJWToken, async (req, res) => {
+      const decodedToken = req.decoded;
+            
+      if(decodedToken.email !== req.query.email){
+            res.status(403).send({message: 'unauthorized access'})
+      }
+      
+      let query = {};
+      if (req.query.email) {
+         query = {
+            "email": req.query.email
+         }
+      }
+      const cursor = users.find(query);
+      const user = await cursor.toArray();
+      res.send(user);
+   });
+
+  app.post('/addUser', async (req, res) => {
+      const newUser = req.body;
+      const result = await users.insertOne(newUser);
+      res.send(result);
+   });
+  // Users Functionality End
 
 }
 
