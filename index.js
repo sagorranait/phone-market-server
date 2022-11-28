@@ -119,7 +119,7 @@ const runServer = async () => {
    });
   // Users Functionality End
 
-  // Category Functionality Start
+  // Category and Product Functionality Start
   app.get('/categories', async (req, res) => { 
       let query = {};
       const cursor = category.find(query);
@@ -140,6 +140,24 @@ const runServer = async () => {
       const cursor = products.find(query);
       const advertisedProduct = await cursor.toArray();
       res.send(advertisedProduct);
+   });
+
+   app.get('/sellerproduct', verifyJWToken, async (req, res) => { 
+      const decodedToken = req.decoded;
+            
+      if(decodedToken.email !== req.query.email){
+            res.status(403).send({message: 'unauthorized access'})
+      }
+
+      let query = {};
+      if (req.query.email) {
+         query = {
+            "saler_email": req.query.email
+         }
+      }
+      const cursor = products.find(query);
+      const reportes = await cursor.toArray();
+      res.send(reportes);
    });
 
    app.patch('/product/:id', async (req, res) => {
@@ -171,7 +189,27 @@ const runServer = async () => {
       const result = await products.updateOne(query, updatedDoc);
       res.send(result);
    });
-  // Category Functionality End
+
+   app.patch('/sellerproduct/:id', async (req, res) => {
+      const id = req.params.id;
+      const advertised = req.body.advertised;
+      const query = { _id: ObjectId(id) }
+      const updatedDoc = {
+         $set:{        
+            "advertised": advertised
+         }
+      }
+      const result = await products.updateOne(query, updatedDoc);
+      res.send(result);
+   });
+
+   app.delete('/product/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await products.deleteOne(query);
+      res.send(result);
+  });
+  // Category and Product Functionality End
 
    //   Booked Functionality Start
    app.get('/booked', verifyJWToken, async (req, res) => { 
@@ -207,6 +245,13 @@ const runServer = async () => {
    //   Booked Functionality End
 
    //   Reported Functionality Start
+   app.get('/allReporte', async (req, res) => { 
+      let query = {};
+      const cursor = productReport.find(query);
+      const allReporte = await cursor.toArray();
+      res.send(allReporte);
+   });
+   
    app.get('/reported', verifyJWToken, async (req, res) => { 
       const decodedToken = req.decoded;
             
@@ -237,6 +282,7 @@ const runServer = async () => {
       const result = await productReport.deleteOne(query);
       res.send(result);
   });
+
    //   Reported Functionality End
 
 }
