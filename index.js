@@ -65,6 +65,18 @@ const runServer = async () => {
       const result = await users.insertOne(newUser);
       res.send(result);
    });
+
+   app.put('/addUser/:email', async (req, res) => {
+      const email = req.params.email
+      const user = req.body;
+      const filter = { email: email }
+      const options = { upsert: true }
+      const updateDoc = {
+          $set: user
+      }
+      const result = await users.updateOne(filter, updateDoc, options)
+      res.send(result)
+  })
   // Users Functionality End
 
   // Category Functionality Start
@@ -122,6 +134,24 @@ const runServer = async () => {
   // Category Functionality End
 
    //   Booked Functionality Start
+   app.get('/booked', verifyJWToken, async (req, res) => { 
+      const decodedToken = req.decoded;
+            
+      if(decodedToken.email !== req.query.email){
+            res.status(403).send({message: 'unauthorized access'})
+      }
+
+      let query = {};
+      if (req.query.email) {
+         query = {
+            "user_info.email": req.query.email
+         }
+      }
+      const cursor = bookedProduct.find(query);
+      const reportes = await cursor.toArray();
+      res.send(reportes);
+   });
+
    app.post('/booked', async (req, res) => {
       const newUser = req.body;
       const result = await bookedProduct.insertOne(newUser);
@@ -130,11 +160,36 @@ const runServer = async () => {
    //   Booked Functionality End
 
    //   Reported Functionality Start
+   app.get('/reported', verifyJWToken, async (req, res) => { 
+      const decodedToken = req.decoded;
+            
+      if(decodedToken.email !== req.query.email){
+            res.status(403).send({message: 'unauthorized access'})
+      }
+
+      let query = {};
+      if (req.query.email) {
+         query = {
+            "user_info.email": req.query.email
+         }
+      }
+      const cursor = productReport.find(query);
+      const reportes = await cursor.toArray();
+      res.send(reportes);
+   });
+
    app.post('/reported', async (req, res) => {
       const newUser = req.body;
       const result = await productReport.insertOne(newUser);
       res.send(result);
    });
+
+   app.delete('/reported/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await productReport.deleteOne(query);
+      res.send(result);
+  });
    //   Reported Functionality End
 
 }
