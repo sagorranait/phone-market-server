@@ -82,7 +82,60 @@ const runServer = async () => {
       const product = await cursor.toArray();
       res.send(product);
    });
+
+   app.get('/product/advertised', async (req, res) => { 
+      const query = { "advertised": true };
+      const cursor = products.find(query);
+      const advertisedProduct = await cursor.toArray();
+      res.send(advertisedProduct);
+   });
+
+   app.patch('/product/:id', async (req, res) => {
+      const id = req.params.id;
+      const user = req.body.user;
+      const status = req.body.status;
+      const query = { _id: ObjectId(id) }
+      const updatedDoc = {
+         $set:{        
+            "booked.user": user,
+            "booked.status": status
+         }
+      }
+      const result = await products.updateOne(query, updatedDoc);
+      res.send(result);
+   });
+
+   app.patch('/product/report/:id', async (req, res) => {
+      const id = req.params.id;
+      const user = req.body.user;
+      const status = req.body.status;
+      const query = { _id: ObjectId(id) }
+      const updatedDoc = {
+         $set:{        
+            "reported.user": user,
+            "reported.status": status
+         }
+      }
+      const result = await products.updateOne(query, updatedDoc);
+      res.send(result);
+   });
   // Category Functionality End
+
+   //   Booked Functionality Start
+   app.post('/booked', async (req, res) => {
+      const newUser = req.body;
+      const result = await bookedProduct.insertOne(newUser);
+      res.send(result);
+   });
+   //   Booked Functionality End
+
+   //   Reported Functionality Start
+   app.post('/reported', async (req, res) => {
+      const newUser = req.body;
+      const result = await productReport.insertOne(newUser);
+      res.send(result);
+   });
+   //   Reported Functionality End
 
 }
 
