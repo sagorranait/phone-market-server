@@ -60,6 +60,39 @@ const runServer = async () => {
       res.send(user);
    });
 
+   app.patch('/user/:id', async (req, res) => {
+      const id = req.params.id;
+      const verifiy = req.body.verified;
+      const query = { _id: ObjectId(id) }
+      const updatedDoc = {
+         $set:{        
+            "verified": verifiy
+         }
+      }
+      const result = await users.updateOne(query, updatedDoc);
+      res.send(result);
+   });
+
+   app.get('/user/allSeller', async (req, res) => { 
+      let query = {
+         "status": 'seller'
+      };
+      
+      const cursor = users.find(query);
+      const user = await cursor.toArray();
+      res.send(user);
+   });
+
+   app.get('/user/allBuyer', async (req, res) => { 
+      let query = {
+         "status": 'buyer'
+      };
+      
+      const cursor = users.find(query);
+      const user = await cursor.toArray();
+      res.send(user);
+   });
+
   app.post('/addUser', async (req, res) => {
       const newUser = req.body;
       const result = await users.insertOne(newUser);
@@ -76,7 +109,14 @@ const runServer = async () => {
       }
       const result = await users.updateOne(filter, updateDoc, options)
       res.send(result)
-  })
+  });
+
+  app.delete('/user/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await users.deleteOne(query);
+      res.send(result);
+   });
   // Users Functionality End
 
   // Category Functionality Start
@@ -157,6 +197,13 @@ const runServer = async () => {
       const result = await bookedProduct.insertOne(newUser);
       res.send(result);
    });
+
+   app.delete('/booked/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await bookedProduct.deleteOne(query);
+      res.send(result);
+  });
    //   Booked Functionality End
 
    //   Reported Functionality Start
