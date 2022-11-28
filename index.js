@@ -160,6 +160,12 @@ const runServer = async () => {
       res.send(reportes);
    });
 
+   app.post('/product', async (req, res) => {
+      const newProduct = req.body;
+      const result = await products.insertOne(newProduct);
+      res.send(result);
+   });
+
    app.patch('/product/:id', async (req, res) => {
       const id = req.params.id;
       const user = req.body.user;
