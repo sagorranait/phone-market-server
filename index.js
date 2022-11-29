@@ -3,6 +3,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -39,6 +40,7 @@ const runServer = async () => {
    const category = client.db('phoneMarket').collection('category');
    const productReport = client.db('phoneMarket').collection('productReport');
    const bookedProduct = client.db('phoneMarket').collection('bookedProduct');
+   const payments = client.db('phoneMarket').collection('payments');
 
    // JWT
    app.post('/jwt', (req, res) =>{
@@ -234,6 +236,47 @@ const runServer = async () => {
       const cursor = bookedProduct.find(query);
       const reportes = await cursor.toArray();
       res.send(reportes);
+   });
+
+   app.get('/booked/:id', async (req, res) => { 
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+
+      const cursor = bookedProduct.find(query);
+      const product = await cursor.toArray();
+      res.send(product);
+   });
+
+   app.post('/create-payment-intent', async (req, res) => {
+      const booking = req.body;
+      const price = booking.price;
+      const amount = price * 100;
+
+      const paymentIntent = await stripe.paymentIntents.create({
+          currency: 'usd',
+          amount: amount,
+          "payment_method_types": [
+              "card"
+          ]
+      });
+      res.send({
+          clientSecret: paymentIntent.client_secret,
+      });
+  });
+
+  app.post('/payments', async (req, res) =>{
+      const payment = req.body;
+      const result = await payments.insertOne(payment);
+      const id = payment.bookingId
+      const filter = {_id: ObjectId(id)}
+      const updatedDoc = {
+         $set: {
+            paid: true,
+            transactionId: payment.transactionId
+         }
+      }
+      const updatedResult = await bookedProduct.updateOne(filter, updatedDoc)
+      res.send(result);
    });
 
    app.post('/booked', async (req, res) => {
