@@ -138,7 +138,7 @@ const runServer = async () => {
    });
 
    app.get('/product/advertised', async (req, res) => { 
-      const query = { "advertised": true };
+      const query = { "advertised": true, "sales_status": 'available' };
       const cursor = products.find(query);
       const advertisedProduct = await cursor.toArray();
       res.send(advertisedProduct);
