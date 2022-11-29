@@ -131,7 +131,7 @@ const runServer = async () => {
 
    app.get('/category/product/:id', async (req, res) => { 
       const id = req.params.id;
-      const query = { "cat_id": id };
+      const query = { "cat_id": id, "sales_status": 'available' };
       const cursor = products.find(query);
       const product = await cursor.toArray();
       res.send(product);
@@ -267,7 +267,7 @@ const runServer = async () => {
   app.post('/payments', async (req, res) =>{
       const payment = req.body;
       const result = await payments.insertOne(payment);
-      const id = payment.bookingId
+      const id = payment.bookingId;
       const filter = {_id: ObjectId(id)}
       const updatedDoc = {
          $set: {
@@ -275,7 +275,17 @@ const runServer = async () => {
             transactionId: payment.transactionId
          }
       }
-      const updatedResult = await bookedProduct.updateOne(filter, updatedDoc)
+      const updatedResult = await bookedProduct.updateOne(filter, updatedDoc);
+
+      const proId = payment.productId;
+      const proFilter = {_id: ObjectId(proId)}
+      const updatedDocs = {
+         $set: {
+            "sales_status" : 'sold'
+         }
+      }
+      const updatedResults = await products.updateOne(proFilter, updatedDocs);
+
       res.send(result);
    });
 
